@@ -1,0 +1,7 @@
+# Downloaded books
+/output/
+
+# Bundler
+/.bundle/
+/vendor/bundle/
+Gemfile.lock

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/writebook_scraper"
+
+if ARGV.empty?
+  puts "Usage: writebook_scraper <book_url>"
+  puts "Example: writebook_scraper https://books.example.com/1/my-book"
+  exit 1
+end
+
+scraper = WritebookScraper.new(ARGV[0])
+scraper.scrape

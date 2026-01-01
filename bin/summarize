@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ $# -eq 0 ]; then
+  echo "Usage: summarize <output_directory>"
+  echo "Example: summarize output/my-book"
+  exit 1
+fi
+
+OUTPUT_DIR="$1"
+
+if [ ! -d "$OUTPUT_DIR" ]; then
+  echo "Error: Directory '$OUTPUT_DIR' does not exist"
+  exit 1
+fi
+
+if [ ! -f "$OUTPUT_DIR/index.md" ]; then
+  echo "Error: No index.md found in '$OUTPUT_DIR'"
+  exit 1
+fi
+
+BOOK_SLUG=$(basename "$OUTPUT_DIR")
+SUMMARY_FILE="${BOOK_SLUG}.md"
+
+echo "Summarizing book in $OUTPUT_DIR..."
+echo "Output will be saved to $SUMMARY_FILE"
+
+# Combine all markdown files (index first, then chapters)
+COMBINED_CONTENT=$(cat "$OUTPUT_DIR/index.md"; echo -e "\n\n---\n"; for f in "$OUTPUT_DIR"/*.md; do [ "$(basename "$f")" != "index.md" ] && cat "$f" && echo -e "\n\n---\n"; done)
+
+# Call Claude to summarize (using Opus for best quality)
+echo "$COMBINED_CONTENT" | claude --model opus -p "Summarize this technical book/manual into an LLM-friendly reference document.
+
+Output format (in markdown):
+
+# [Book Title] Summary
+
+## Overview
+[2-3 paragraphs about what this book covers and who it's for]
+
+## Section Summaries
+
+### [Section Title]
+- [Key point 1]
+- [Key point 2]
+- [Important commands/hotkeys - preserve exactly]
+
+[Repeat for each section]
+
+## Quick Reference
+
+### Essential Hotkeys
+| Hotkey | Function |
+|--------|----------|
+| ... | ... |
+
+### Key Configuration Paths
+| Path | Purpose |
+|------|---------|
+| ... | ... |
+
+### Troubleshooting
+| Issue | Solution |
+|-------|----------|
+| ... | ... |
+
+IMPORTANT:
+- Output ONLY the markdown summary, no preamble or explanation
+- Preserve technical accuracy - commands, paths, and hotkeys must be exact
+- Be concise but comprehensive
+- Focus on actionable information" > "$SUMMARY_FILE"
+
+echo "Done! Summary saved to $SUMMARY_FILE"
